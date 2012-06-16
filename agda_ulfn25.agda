@@ -139,10 +139,17 @@ complement_list (keep p)         = (complement_list p)
 lem-plus-zero : (n : Nat) -> n + zero == n
 lem-plus-zero zero = refl
 lem-plus-zero (suc n) with n + zero | lem-plus-zero n
-lem-plus-zero (suc n)    | .n       | refl = refl -- dot notation
+lem-plus-zero (suc n)    | .n       | refl            = refl -- dot notation
 -- with値は複数もつことができる、
 -- n+zeroとn
 -- lem-plus-zero nとrefl
+
+{-
+ラシウラさんの説明から。
+「.」つきの識別子はパターン中で使うもので、with行のドットなしのものと同
+じものであることを示すもののようです。ドットなしだと名前は同じでもあら
+たな別の変数として解釈されるようです。
+-}
 
 {-
 In the step case we would like to pattern match on the 
