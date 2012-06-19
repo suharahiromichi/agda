@@ -121,6 +121,19 @@ l2 = refl
 
 -------------
 -- 証明
--- 未了。
+infixr 4 _==_
+_==_ : forall {A : Set} -> A -> A -> Set1
+a == b = (P : _ -> Set) -> P a -> P b
+
+eqrefl : forall {A : Set} {x : A} -> x == x
+eqrefl _ p = p
+
+eqsuc : {n m : ℕ} -> n == m -> suc n == suc m
+eqsuc n=m P = n=m (\ l -> P (suc l))
+
+-- rec b1 n == n の証明
+l11 : (n : ℕ) -> rec b1 n == n
+l11 zero = eqrefl
+l11 (suc n) = eqsuc (l11 n)
 
 -- END
