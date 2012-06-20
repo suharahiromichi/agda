@@ -4,6 +4,9 @@
 
   2.5 Programs as proofs
   2.6 More on pattern matching
+
+  演習問題の解答の正しさは無保証です。まして模範解答ではありません。
+  @suharahiromichi
 -}
 
 module agda_ulfn25 where
@@ -227,10 +230,25 @@ complement (skip {x} zs) = x :: (complement zs) -- {}は省略できる。
 
 -- (f) Compute all sublists of a given list
 
---sublists : {A : Set} (xs : List A) -> List (SubList xs)
-sublists : {A : Set} (xs : List A) -> (SubList xs)
--- sublists [] = [] :: []
-sublists [] = []
-sublists (x :: xs) = {!!}
+-- 普通のappend
+infixr 5 _++_
+_++_ : {a : Set} -> List a -> List a -> List a
+[] ++ ys = ys
+(x :: xs) ++ ys = x :: (xs ++ ys)
+
+-- 普通のmap
+map : {A B : Set} -> (A -> B) -> List A -> List B
+-- 実際の型は、以下のようになる。
+-- map : {A : Set} {x : A} {xs : List A} ->
+--  (SubList xs -> SubList (x :: xs)) -> List (SubList xs) -> List (SubList (x :: xs))
+map _ [] = []
+map f (x :: xs) = (f x) :: (map f xs)
+
+sublists : {A : Set} (xs : List A) -> List (SubList xs)
+sublists [] = [] :: []
+sublists (x :: xs) = (map (\y -> skip y) (sublists xs)) ++ (map (\y -> x :: y) (sublists xs))
+
+test_sublist2 : length (sublists (zero :: (suc zero) :: [])) == suc (suc (suc (suc zero)))
+test_sublist2 = refl
 
 -- END
