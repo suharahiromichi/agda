@@ -30,10 +30,11 @@ data Tree (A : Set) : Set where
   empty : Tree A
   node  : A -> Tree A -> Tree A -> Tree A
 
+-- パンの切れ端、または、アリアドネの糸
 -- data Crumb a = LeftCrumb a (Tree a) | RightCrumb a (Tree a) deriving (Show)
 data Crumb (A : Set) : Set where
-  L : A -> Tree A -> Crumb A
-  R : A -> Tree A -> Crumb A
+  L : A -> Tree A -> Crumb A                -- ノードA、右はTreeのとき、左に曲がったことをリストする。
+  R : A -> Tree A -> Crumb A                -- ノードA、左はTreeのとき、右に曲がったことをリストする。
 
 -- type Breadcrumbs a = [Crumb a]
 -- type Zipper a = (Tree a, Breadcrumbs a) 
@@ -71,15 +72,15 @@ goLeft z[ empty,     , bs ] = nothing
 -- goRight :: (Tree a, Breadcrumbs a) -> (Tree a, Breadcrumbs a)  
 -- goRight (Node x l r, bs) = (r, RightCrumb x l:bs)  
 goRight : {A : Set} -> Zipper A -> Maybe (Zipper A)
-goRight z[ node x l r , bs ] = some z[ r , L x l ∷ bs ]
+goRight z[ node x l r , bs ] = some z[ r , R x l ∷ bs ]
 goRight z[ empty      , bs ] = nothing
 
 -- goUp :: (Tree a, Breadcrumbs a) -> (Tree a, Breadcrumbs a)  
 -- goUp (t, LeftCrumb x r:bs) = (Node x t r, bs)  
 -- goUp (t, RightCrumb x l:bs) = (Node x l t, bs)  
 goUp : {A : Set} -> Zipper A -> Maybe (Zipper A)
-goUp z[ t , L x r ∷ bs ] = some z[ node x t r , bs ]
-goUp z[ t , R x l ∷ bs ] = some z[ node x l t , bs ]
+goUp z[ t , L x r ∷ bs ] = some z[ node x t r , bs ] -- Lにいったらtだったのを戻す。
+goUp z[ t , R x l ∷ bs ] = some z[ node x l t , bs ] -- Rにいったらtだったのを戻す。
 goUp z[ _ , _ ]          = nothing
 
 -- modify :: (a -> a) -> Zipper a -> Zipper a
@@ -106,47 +107,54 @@ freeTree : Tree Char
 freeTree = 
          node 'P'
          (node 'O'
+           (node 'L'
+             (node 'N' empty empty)
+             (node 'T' empty empty)
+           )
+           (node 'Y'
+             (node 'S' empty empty)
+             (node 'A' empty empty)
+           )
+         )
          (node 'L'
-         (node 'N' empty empty)
-         (node 'T' empty empty)
-         )
-         (node 'Y'
-         (node 'S' empty empty)
-         (node 'A' empty empty)
-         )
-         )
-         (node 'L'
-         (node 'W'
-         (node 'C' empty empty)
-         (node 'R' empty empty)
-         )
-         (node 'A'
-         (node 'A' empty empty)
-         (node 'C' empty empty)
-         )
+           (node 'W'
+             (node 'C' empty empty)
+             (node 'R' empty empty)
+           )
+           (node 'A'
+             (node 'A' empty empty)
+             (node 'C' empty empty)
+           )
          )
 
 mkzip : {A : Set} -> Tree A -> Maybe (Zipper A)
 mkzip t = some z[ t , [] ]
 
-getchar : Maybe (Zipper Char) -> Char
-getchar nothing                    = ' '
-getchar (some z[ node x _ _ , _ ]) = x
-getchar (some z[ empty,     , _ ]) = ' '
+nodechar : Zipper Char -> Maybe Char
+nodechar z[ node x _ _ , _ ] = some x
+nodechar z[ empty,     , _ ] = nothing
 
 data _≡_ {A : Set} (x : A) : A -> Set where
   refl : x ≡ x
 
-test1 : getchar (mkzip freeTree >>= goLeft >>= goRight >>= goUp) ≡ 'O'
+test1 : (mkzip freeTree >>= goLeft >>= goRight >>=
+  goUp >>= nodechar) ≡ return 'O'
 test1 = refl
 
-test2 : getchar (mkzip freeTree >>= goLeft >>= goRight >>= modify (\ x -> 'P')) ≡ 'P'
+test2 : (mkzip freeTree >>= goLeft >>= goRight >>=
+  modify (\ x -> 'Z') >>= nodechar) ≡ return 'Z'
 test2 = refl
 
-test3 : getchar (mkzip freeTree >>= goLeft >>= goLeft >>= goLeft >>= topMost) ≡ 'P'
+test3 : (mkzip freeTree >>= goLeft >>= goLeft >>=
+  goLeft >>= topMost >>= nodechar) ≡ return 'P'
 test3 = refl
 
-test4 : getchar(mkzip freeTree >>= goLeft >>= goLeft >>= goLeft >>= goLeft >>= attach (node 'Z' empty empty)) ≡ 'Z'
+test4 : (mkzip freeTree >>= goLeft >>= goLeft >>= goLeft >>= goLeft >>=
+  attach (node 'Z' empty empty) >>= nodechar) ≡ return 'Z'
 test4 = refl
+
+test5 : (mkzip freeTree >>= goRight >>= goRight >>= goUp >>= goUp >>=
+  goRight >>= goRight >>= nodechar) ≡ return 'A'
+test5 = refl
 
 -- END
