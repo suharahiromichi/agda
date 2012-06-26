@@ -67,7 +67,7 @@ open RawMonad maybe-monad
 -- goLeft (Node x l r, bs) = (l, LeftCrumb x r:bs)
 goLeft : {A : Set} -> Zipper A -> Maybe (Zipper A)
 goLeft z[ node x l r , bs ] = some z[ l , L x r ∷ bs ]
-goLeft z[ empty,     , bs ] = nothing
+goLeft z[ empty      , bs ] = nothing
 
 -- goRight :: (Tree a, Breadcrumbs a) -> (Tree a, Breadcrumbs a)  
 -- goRight (Node x l r, bs) = (r, RightCrumb x l:bs)  
@@ -132,7 +132,7 @@ mkzip t = some z[ t , [] ]
 
 nodechar : Zipper Char -> Maybe Char
 nodechar z[ node x _ _ , _ ] = some x
-nodechar z[ empty,     , _ ] = nothing
+nodechar z[ empty      , _ ] = nothing
 
 data _≡_ {A : Set} (x : A) : A -> Set where
   refl : x ≡ x
